@@ -1,9 +1,10 @@
 use rand::RngExt;
+use rusqlite::{Connection, Result, params};
 
-use doll::Doll;
 mod doll;
+use doll::Doll;
 
-fn main() {
+fn main() -> Result<()> {
     println!("Hello, world!");
 
     let doll_fnames = ["John", "Jane", "Jack", "Jill"];
@@ -17,12 +18,46 @@ fn main() {
     println!("{}{}", fnum, lnum);
 
     let newdoll: Doll = Doll {
-        doll_id: 1,
+        id: 0,
         fname: String::from(doll_fnames[fnum]),
         lname: String::from(doll_lnames[lnum]),
-        born: 1959,
-        died: None,
+        needs: None
     };
 
     println!("New doll created: {} {}", newdoll.fname, newdoll.lname);
+
+    let conn =  Connection::open("dolls.db3")?;
+
+    conn.execute(
+        "CREATE TABLE IF NOT EXISTS dolls (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            fname TEXT NOT NULL,
+            lname TEXT NOT NULL,
+            needs BLOB
+        )",
+        (), //no params
+    )?;
+
+    conn.execute(
+        "INSERT INTO dolls (fname, lname, needs) VALUES (?1, ?2, ?3)",
+            (&newdoll.fname, &newdoll.lname, &newdoll.needs),
+    )?;
+
+    println!("Doll Added");
+
+    let mut stmt = conn.prepare("SELECT id, fname, lname, needs FROM dolls")?;
+    let doll_iter = stmt.query_map([], |row| {
+        Ok(Doll {
+            id: row.get(0)?,
+            fname: row.get(1)?,
+            lname: row.get(2)?,
+            needs: row.get(3)?,
+        })
+    })?;
+
+    for doll in doll_iter {
+        println!("Found doll: {:?}", doll?);
+    }
+
+    Ok(())
 }
