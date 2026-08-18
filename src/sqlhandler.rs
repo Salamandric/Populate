@@ -1,3 +1,4 @@
+use rand::random_range;
 use rusqlite::{Connection, Error, Result};
 
 use crate::doll::Doll;
@@ -8,12 +9,17 @@ pub struct SqlHandler {
 
 impl SqlHandler {
 
+    pub fn new() -> Self {
+        Self {conn: Connection::open("dolls.db3").expect("Error opening connection")}
+    }
+
     pub fn create_table_if_not_exists(&self) {
         self.conn.execute(
             "CREATE TABLE IF NOT EXISTS Dolls (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 fname TEXT NOT NULL,
                 lname TEXT NOT NULL,
+                gender TEXT NOT NULL,
                 needs BLOB NOT NULL
             )",
             (), //no params
@@ -21,32 +27,101 @@ impl SqlHandler {
 
     }
 
-    pub fn list_dolls(&self) -> Result<Vec<Doll>> {
+    pub fn list_dolls(&self) -> Vec<Doll> {
 
         self.create_table_if_not_exists();
         
-        let mut stmt = self.conn.prepare("SELECT id, fname, lname, needs FROM dolls")?;
+        let mut stmt = self.conn.prepare("SELECT id, fname, lname, gender, needs FROM dolls").expect("SqlHandler.list_dolls.stmt");
         let doll_iter = stmt.query_map([], |row| {
             Ok(Doll {
                 id: row.get(0)?,
                 fname: row.get(1)?,
                 lname: row.get(2)?,
-                needs: row.get(3)?
+                gender: row.get(3)?,
+                needs: row.get(4)?
             })
-        })?;
+        }).expect("SqlHandler.list_dolls.doll_iter");
 
         let dolls: Result<Vec<Doll>, Error> = doll_iter.collect();
-        return dolls;
+        if let Ok(dolls) = dolls {
+            return dolls;
+        }
+        else {
+            panic!("SqlHandler.list_dolls: result not valid ");
+        }
     }
 
     pub fn add_doll(&self, newdoll: Doll) {
         self.create_table_if_not_exists();
 
         self.conn.execute(
-            "INSERT INTO dolls (fname, lname, needs) VALUES (?1, ?2, ?3)",
-            (newdoll.fname, newdoll.lname, newdoll.needs),
+            "INSERT INTO dolls (fname, lname, gender, needs) VALUES (?1, ?2, ?3, ?4)",
+            (newdoll.fname, newdoll.lname, newdoll.gender, newdoll.needs),
         ).expect("Error adding doll");
+    }
 
-        println!("Doll Added");
+    pub fn get_random_name(&self, types:&str) -> String {
+        
+        let mut query = String::from("Select Name FROM DollNames");
+
+        if types != "" {
+            println!("List found: {}", types);
+
+            let requirements: Vec<&str> = types.split(", ").collect();
+
+            query += " WHERE ";
+
+            let mut didadd = false;
+            
+            for ask in requirements {
+
+                match ask {
+                    "Masculine" => {
+                        if didadd == true {query += " AND "}
+                        query += "Masculine = 1";
+                        didadd = true;
+                    },
+                    "Feminine" => {
+                        if didadd == true {query += " AND "}
+                        query += "Feminine = 1";
+                        didadd = true;
+                    },
+                    "Neutral" => {
+                        if didadd == true {query += " AND "}
+                        query += "Neutral = 1";
+                        didadd = true;
+                    },
+                    "FirstName" => {
+                        if didadd == true {query += " AND "}
+                        query += "FirstName = 1";
+                        didadd = true;
+                    },
+                    "LastName" => {
+                        if didadd == true {query +=" AND "}
+                        query += "LastName = 1";
+                        didadd = true;
+                    },
+                    _ => println!("ERROR, \"{}\" Is not a valid name type.", ask)
+                }
+            }
+        }
+
+        println!("Query is {}", query);
+
+        let mut stmt = self.conn.prepare(&query).expect("Error with query");
+        let name_iter = stmt.query_map([], |row| row.get(0)).expect("Couldn't get rows");
+
+        let name_list: Result<Vec<String>, Error> = name_iter.collect();
+        
+        if let Ok(name_list) = name_list {
+            let nameindex = random_range(0..name_list.len());
+            
+            return name_list[nameindex].clone();
+        }
+        else {
+            panic!("SqlHandler.get_random_name: result not valid");
+        }
+        
+
     }
 }
