@@ -23,7 +23,7 @@ impl SqlHandler {
                 needs BLOB NOT NULL
             )",
             (), //no params
-        ).expect("");
+        ).expect("error creating dolls table");
 
     }
 
@@ -31,7 +31,7 @@ impl SqlHandler {
 
         self.create_table_if_not_exists();
         
-        let mut stmt = self.conn.prepare("SELECT id, fname, lname, gender, needs FROM dolls").expect("SqlHandler.list_dolls.stmt");
+        let mut stmt = self.conn.prepare("SELECT id, fname, lname, gender, needs FROM dolls").expect("error getting dolls");
         let doll_iter = stmt.query_map([], |row| {
             Ok(Doll {
                 id: row.get(0)?,
@@ -40,11 +40,11 @@ impl SqlHandler {
                 gender: row.get(3)?,
                 needs: row.get(4)?
             })
-        }).expect("SqlHandler.list_dolls.doll_iter");
+        }).expect("error mapping dolls");
 
         let dolls: Result<Vec<Doll>, Error> = doll_iter.collect();
         if let Ok(dolls) = dolls {
-            return dolls;
+            dolls
         }
         else {
             panic!("SqlHandler.list_dolls: result not valid ");
@@ -52,6 +52,7 @@ impl SqlHandler {
     }
 
     pub fn add_doll(&self, newdoll: Doll) {
+
         self.create_table_if_not_exists();
 
         self.conn.execute(
@@ -61,11 +62,12 @@ impl SqlHandler {
     }
 
     pub fn get_random_name(&self, types:&str) -> String {
-        
+
+        self.create_table_if_not_exists();
+
         let mut query = String::from("Select Name FROM DollNames");
 
         if types != "" {
-            println!("List found: {}", types);
 
             let requirements: Vec<&str> = types.split(", ").collect();
 
@@ -77,27 +79,27 @@ impl SqlHandler {
 
                 match ask {
                     "Masculine" => {
-                        if didadd == true {query += " AND "}
+                        if didadd {query += " AND "}
                         query += "Masculine = 1";
                         didadd = true;
                     },
                     "Feminine" => {
-                        if didadd == true {query += " AND "}
+                        if didadd {query += " AND "}
                         query += "Feminine = 1";
                         didadd = true;
                     },
                     "Neutral" => {
-                        if didadd == true {query += " AND "}
+                        if didadd {query += " AND "}
                         query += "Neutral = 1";
                         didadd = true;
                     },
                     "FirstName" => {
-                        if didadd == true {query += " AND "}
+                        if didadd {query += " AND "}
                         query += "FirstName = 1";
                         didadd = true;
                     },
                     "LastName" => {
-                        if didadd == true {query +=" AND "}
+                        if didadd {query +=" AND "}
                         query += "LastName = 1";
                         didadd = true;
                     },
@@ -106,7 +108,7 @@ impl SqlHandler {
             }
         }
 
-        println!("Query is {}", query);
+        println!("Name Query: {}", query);
 
         let mut stmt = self.conn.prepare(&query).expect("Error with query");
         let name_iter = stmt.query_map([], |row| row.get(0)).expect("Couldn't get rows");
@@ -116,7 +118,7 @@ impl SqlHandler {
         if let Ok(name_list) = name_list {
             let nameindex = random_range(0..name_list.len());
             
-            return name_list[nameindex].clone();
+            name_list[nameindex].clone()
         }
         else {
             panic!("SqlHandler.get_random_name: result not valid");

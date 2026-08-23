@@ -1,7 +1,3 @@
-use rusqlite::{Statement, Error};
-
-use crate::sqlhandler::SqlHandler;
-
 #[derive(Debug)]
 pub struct Doll {
     pub id: u32,
@@ -14,15 +10,16 @@ pub struct Doll {
 impl Doll {
 
     pub fn to_string(&self) -> String {
-        let format_name = format!("{} {}", self.fname, self.lname);
+        //let format_name = format!("{} {}", self.fname, self.lname);
 
         let format_id = format!("{:08}", self.id);
         let (id0,id1) = format_id.split_at(4);
 
         let doll_format = format!(
-            "Doll {{ID:{:04}-{:04}|Name: {:15}|Gender: {:8}|Hunger: {:9} |Mood: {:9} |Energy: {:9} }}", 
+            "Doll {{ID:{:04}-{:04}|Name: {:12} {:12}|Gender: {:8}|Hunger: {:9} |Mood: {:9} |Energy: {:9} }}", 
             id0, id1,
-            format_name, 
+            self.fname,
+            self.lname, 
             self.gender,
             self.get_need_status(0),    //hunger
             self.get_need_status(1),    //mood
@@ -35,7 +32,7 @@ impl Doll {
     
 
     pub fn get_need_status(&self, index: i32) -> String {
-        return match index {
+        match index {
             0 => {
                 match self.needs[0] {
                     ..0x40 => "Stuffed".to_owned(),
@@ -58,6 +55,6 @@ impl Doll {
                     ..=0xFF => "Exhausted".to_owned(),
             }},
             _ => panic!("Looked for an Invalid Doll Need"),
-        };
+        }
     }
 }
