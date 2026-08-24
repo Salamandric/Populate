@@ -1,4 +1,4 @@
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct Doll {
     pub id: u32,
     pub fname: String,

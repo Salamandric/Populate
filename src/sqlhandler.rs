@@ -1,16 +1,16 @@
 use rand::random_range;
-use rusqlite::{Connection, Error, Result};
+use rusqlite;
 
 use crate::doll::Doll;
 
 pub struct SqlHandler {
-    pub conn: Connection
+    pub conn: rusqlite::Connection,
 }
 
 impl SqlHandler {
 
     pub fn new() -> Self {
-        Self {conn: Connection::open("dolls.db3").expect("Error opening connection")}
+        Self {conn: rusqlite::Connection::open("dolls.db3").expect("Error opening connection")}
     }
 
     pub fn create_table_if_not_exists(&self) {
@@ -42,7 +42,31 @@ impl SqlHandler {
             })
         }).expect("error mapping dolls");
 
-        let dolls: Result<Vec<Doll>, Error> = doll_iter.collect();
+        let dolls: Result<Vec<Doll>, rusqlite::Error> = doll_iter.collect();
+        if let Ok(dolls) = dolls {
+            dolls
+        }
+        else {
+            panic!("SqlHandler.list_dolls: result not valid ");
+        }
+    }
+
+    pub async fn list_dolls_async(&self) -> Vec<Doll> {
+
+        self.create_table_if_not_exists();
+        
+        let mut stmt = self.conn.prepare("SELECT id, fname, lname, gender, needs FROM dolls").expect("error getting dolls");
+        let doll_iter = stmt.query_map([], |row| {
+            Ok(Doll {
+                id: row.get(0)?,
+                fname: row.get(1)?,
+                lname: row.get(2)?,
+                gender: row.get(3)?,
+                needs: row.get(4)?
+            })
+        }).expect("error mapping dolls");
+
+        let dolls: Result<Vec<Doll>, rusqlite::Error> = doll_iter.collect();
         if let Ok(dolls) = dolls {
             dolls
         }
@@ -113,7 +137,7 @@ impl SqlHandler {
         let mut stmt = self.conn.prepare(&query).expect("Error with query");
         let name_iter = stmt.query_map([], |row| row.get(0)).expect("Couldn't get rows");
 
-        let name_list: Result<Vec<String>, Error> = name_iter.collect();
+        let name_list: Result<Vec<String>, rusqlite::Error> = name_iter.collect();
         
         if let Ok(name_list) = name_list {
             let nameindex = random_range(0..name_list.len());

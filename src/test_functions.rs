@@ -2,12 +2,8 @@ use rand::random_range;
 
 use crate::{doll::Doll, sqlhandler::SqlHandler};
 
-
-
-
-
 #[test]
-fn list_dolls() {
+pub fn list_dolls() {
     
 
 
@@ -22,7 +18,7 @@ fn list_dolls() {
     }
 }
 #[test]
-fn add_random_dolls() {
+pub fn add_random_dolls() {
     
     let doll_handler = SqlHandler::new();
 
