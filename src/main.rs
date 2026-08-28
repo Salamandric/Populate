@@ -1,23 +1,16 @@
 #[cfg(test)]
 mod test_functions;
-
 mod doll;
 mod sqlhandler;
-
 use iced::{
      Element, Font, Length::Fill, Renderer, Subscription, Task, Theme, font, overlay::menu::State, widget::{button, column, container, row, scrollable, table, text},
 };
-
 use crate::{sqlhandler::SqlHandler};
 
 
 
 fn main() -> iced::Result {
-    
-    
-
     iced::application(Populate::new, Populate::update, Populate::view)
-    
     .run()
 }
 
@@ -53,7 +46,7 @@ impl Populate {
         
     };
     app
-}
+    }
 
     fn update(state: &mut Self, message: Message) -> Task<Message> {
         match message {
@@ -70,14 +63,9 @@ impl Populate {
                 Task::none()
             },
         }
-
-        
-        
     }
 
     fn view(&self) -> Element<'_, Message> {
-
-
         let doll_table = {
             fn bold(header: &str) -> impl Into<Element<'_, Message, Theme, Renderer>> {
                 text(header).font(Font {
@@ -86,7 +74,6 @@ impl Populate {
         
                 })
             }
-
             let columns: [table::Column<'_, '_, &doll::Doll, Message, iced::Theme, _>; 7] = [
                 table::column(bold("Id"), |doll: &doll::Doll| text(&doll.id)),
                 table::column(bold("Surname"), |doll: &doll::Doll| text(&doll.lname)),
@@ -120,15 +107,12 @@ impl Populate {
                     
                 }),
             ];
-
             table(columns, &self.doll_list)
             .padding_x(10)
             .padding_y(5)
             .separator(1)
         };
-
         match self.page {
-
             //Doll Creation Page
             Page::Creator => container(row![
                 scrollable(doll_table).spacing(10),
@@ -138,13 +122,10 @@ impl Populate {
                 ]
             ])
             .padding(10)
-            .align_left(Fill)
-            ,
+            .align_left(Fill),
         }.into()
-
     }
-
     async fn make_dolls(num: u32) {
-        
+
     }
 }
