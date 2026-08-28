@@ -1,76 +1,122 @@
-use std::time::Instant;
-
-use rand::{random_range};
-
+// #[cfg(test)]
+// mod test_functions;
 mod doll;
-mod sqlhandler;
-use doll::Doll;
-use crate::sqlhandler::SqlHandler;
+mod sql;
+use iced::{
+     Element, Font, Length::Fill, Renderer, Subscription, Task, Theme, font, futures::task, overlay::menu::State, widget::{button, column, container, row, scrollable, table, text},
+};
 
-fn main() {
-    let now = Instant::now();
-
-    let doll_handler = SqlHandler::new();
-
-
-    //      Test Commands
-    //add_and_list(doll_handler);
-    count_names(doll_handler);
-
-    let elapsed: f64 = now.elapsed().subsec_millis().try_into().expect("msg");
-    println!("Program complete in {} seconds", elapsed/1000.);
+fn main() -> iced::Result {
+    iced::application(Populate::new, Populate::update, Populate::view)
+    .run()
+}
+struct Populate {
+    page: Page,
+    doll_list: Vec<doll::Doll>
 }
 
-fn count_names(handler: SqlHandler) {
-    println!("Your Masculine First Name is: {}", handler.get_random_name("Masculine, FirstName"));
-    println!("Your Feminine First Name is: {}", handler.get_random_name("Feminine, FirstName"));
-    println!("Your Neutral First Name is: {}", handler.get_random_name("Neutral, FirstName"));
-    println!("Your Surname is: {}", handler.get_random_name("LastName"));
+#[derive(Default)]
+enum Page {
+    #[default]
+    Creator,
+}
+#[derive(Debug, Clone)]
+enum Message {
+    GoToCreator,
+    DollsFetched(Vec<doll::Doll>),
+    FetchDolls,
 }
 
-fn add_and_list(handler: SqlHandler) {
-    
-    let doll_fnames = ["John", "Jane", "Jack", "Jill"];
-    let doll_lnames = ["Doe", "Smith", "Johnson", "Brown"];
-    let doll_genders = ["Male", "Female", "Other"];
-    
-    let doll_quota = 1;
+impl Populate {
 
-    for _i in 0..doll_quota {
+    fn new() -> Self {
 
-        let fnum: usize = random_range(0..doll_fnames.len());
-        let lnum: usize = random_range(0..doll_lnames.len());
-        let gend = {
-            match random_range(0..100){
-                ..49 => doll_genders[0],
-                ..99 => doll_genders[1],
-                _ => doll_genders[2]
-            }.to_string()
-        };
-
-        let val0 = random_range(0..255);
-        let val1 = random_range(0..255);
-        let val2 = random_range(0..255);
-
-        let newdoll: Doll = Doll {
-            id: 0,
-            fname: String::from(doll_fnames[fnum]),
-            lname: String::from(doll_lnames[lnum]),
-            gender: gend,
-            needs: vec![val0,val1,val2],
-        };
-
-        handler.add_doll(newdoll);
-
+    let app = Populate {
+        page: Page::Creator,
+        doll_list: [].to_vec()
+        
+    };
+    app
     }
 
-    let doll_list = handler.list_dolls();
-    
-    println!("List obtained");
-
-    for doll in doll_list {
-        println!("{}", doll.to_string());
+    fn update(state: &mut Self, message: Message) -> Task<Message> {
+        match message {
+            Message::GoToCreator => {
+                state.page = Page::Creator;
+                Task::none()
+            }
+            Message::FetchDolls => Task::perform(
+                sql::list_dolls(),
+                Message::DollsFetched
+            ),
+            Message::DollsFetched(dolls) => {
+                state.doll_list = dolls;
+                Task::none()
+            },
+        }
     }
 
+    fn view(&self) -> Element<'_, Message> {
+        let doll_table = {
+            fn bold(header: &str) -> impl Into<Element<'_, Message, Theme, Renderer>> {
+                text(header).font(Font {
+                    weight: font::Weight::Bold,
+                    ..Font::DEFAULT
+        
+                })
+            }
+            let columns: [table::Column<'_, '_, &doll::Doll, Message, iced::Theme, _>; 7] = [
+                table::column(bold("Id"), |doll: &doll::Doll| text(&doll.id)),
+                table::column(bold("Surname"), |doll: &doll::Doll| text(&doll.lname)),
+                table::column(bold("Given Name(s)"), |doll: &doll::Doll| text(&doll.fname)),
+                table::column(bold("Gender"), |doll: &doll::Doll| text(&doll.gender)),
+                table::column(bold("Hunger"), |doll: &doll::Doll| {
+                    text(&doll.needs[0]).style( 
+                        match &doll.needs[0] {
+                            ..128 => text::default,
+                            ..=254 => text::warning,
+                            _ => text::danger,
+                    })
+                    
+                }),
+                table::column(bold("Mood"), |doll: &doll::Doll| {
+                    text(&doll.needs[1]).style( 
+                        match &doll.needs[1] {
+                            ..128 => text::default,
+                            ..=254 => text::warning,
+                            _ => text::danger,
+                    })
+                    
+                }),
+                table::column(bold("Energy"), |doll: &doll::Doll| {
+                    text(&doll.needs[2]).style( 
+                        match &doll.needs[2] {
+                            ..128 => text::default,
+                            ..=254 => text::warning,
+                            _ => text::danger,
+                    })
+                    
+                }),
+            ];
+            table(columns, &self.doll_list)
+            .padding_x(10)
+            .padding_y(5)
+            .separator(1)
+        };
+        match self.page {
+            //Doll Creation Page
+            Page::Creator => container(row![
+                scrollable(doll_table).spacing(10),
+                column![
+                    button("Refresh List").on_press(Message::FetchDolls),
+                    button("New Doll")
+                ]
+            ])
+            .padding(10)
+            .align_left(Fill),
+        }.into()
+    }
+    async fn make_dolls(num: u32) {
 
+    }
 }

@@ -1,4 +1,6 @@
-#[derive(Debug)]
+use async_sqlite::Client;
+
+#[derive(Debug, Clone)]
 pub struct Doll {
     pub id: u32,
     pub fname: String,
@@ -8,7 +10,6 @@ pub struct Doll {
 }
 
 impl Doll {
-
     pub fn to_string(&self) -> String {
         //let format_name = format!("{} {}", self.fname, self.lname);
 
@@ -28,8 +29,6 @@ impl Doll {
 
         return doll_format;
     }
-
-    
 
     pub fn get_need_status(&self, index: i32) -> String {
         match index {
@@ -58,3 +57,9 @@ impl Doll {
         }
     }
 }
+
+/*
+--------------------------
+Functions related to Dolls
+--------------------------
+*/

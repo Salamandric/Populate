@@ -4,5 +4,6 @@ version = "0.1.0"
 edition = "2024"
 
 [dependencies]
+async-sqlite = "0.6.0"
+iced = "0.14.0"
 rand = "0.10.1"
-rusqlite = "0.29.0"
