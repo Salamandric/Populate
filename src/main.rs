@@ -1,7 +1,7 @@
 #[cfg(test)]
 mod test_functions;
 mod doll;
-mod sqlhandler;
+mod doll_handler;
 use iced::{
      Element, Font, Length::Fill, Renderer, Subscription, Task, Theme, font, overlay::menu::State, widget::{button, column, container, row, scrollable, table, text},
 };
