@@ -1,6 +1,5 @@
 use rand::random_range;
-
-use crate::{doll::Doll, sqlhandler::SqlHandler};
+use crate::{doll::Doll, };
 
 #[test]
 pub fn list_dolls() {

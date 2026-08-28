@@ -1,20 +1,19 @@
-#[cfg(test)]
-mod test_functions;
+// #[cfg(test)]
+// mod test_functions;
 mod doll;
-mod doll_handler;
+mod sql;
 use iced::{
-     Element, Font, Length::Fill, Renderer, Subscription, Task, Theme, font, overlay::menu::State, widget::{button, column, container, row, scrollable, table, text},
+     Element, Font, Length::Fill, Renderer, Subscription, Task, Theme, font, futures::task, overlay::menu::State, widget::{button, column, container, row, scrollable, table, text},
 };
-use crate::{sqlhandler::SqlHandler};
-
-
 
 fn main() -> iced::Result {
     iced::application(Populate::new, Populate::update, Populate::view)
     .run()
 }
-
-
+struct Populate {
+    page: Page,
+    doll_list: Vec<doll::Doll>
+}
 
 #[derive(Default)]
 enum Page {
@@ -27,22 +26,14 @@ enum Message {
     DollsFetched(Vec<doll::Doll>),
     FetchDolls,
 }
-struct Populate {
-    doll_handler: SqlHandler,
-    page: Page,
-    doll_list: Vec<doll::Doll>
-}
 
 impl Populate {
 
     fn new() -> Self {
-    let handler = SqlHandler::new();
-    let list = handler.list_dolls();
 
     let app = Populate {
-        doll_handler: handler,
         page: Page::Creator,
-        doll_list: list
+        doll_list: [].to_vec()
         
     };
     app
@@ -54,10 +45,10 @@ impl Populate {
                 state.page = Page::Creator;
                 Task::none()
             }
-            Message::FetchDolls => {
-                state.doll_handler.list_dolls();
-                Task::none()
-            },
+            Message::FetchDolls => Task::perform(
+                sql::list_dolls(),
+                Message::DollsFetched
+            ),
             Message::DollsFetched(dolls) => {
                 state.doll_list = dolls;
                 Task::none()

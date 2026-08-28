@@ -4,8 +4,14 @@ use async_sqlite::rusqlite;
 use crate::{Populate, doll::Doll};
 
 
-fn create_table_if_not_exists() {
+pub async fn create_table_if_not_exists() {
 
+}
+
+
+pub async fn list_dolls() -> Vec<Doll> {
+    println!("Fetching Dolls");
+    [].to_vec()
 }
 /* 
 pub struct SqlHandler {
