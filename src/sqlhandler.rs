@@ -1,5 +1,5 @@
 use rand::random_range;
-use rusqlite;
+use async_sqlite::rusqlite;
 
 use crate::doll::Doll;
 

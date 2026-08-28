@@ -144,11 +144,7 @@ impl Populate {
 
     }
 
-    async fn list_dolls(handler: SqlHandler) -> Vec<doll::Doll> {
-        handler.list_dolls()
-    }
-
     async fn make_dolls(num: u32) {
-
+        
     }
 }
