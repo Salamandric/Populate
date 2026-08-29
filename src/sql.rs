@@ -1,21 +1,21 @@
 use rand::random_range;
 use async_sqlite::rusqlite;
+use crate::{doll::Doll};
 
-use crate::{Populate, doll::Doll};
 
-
-pub async fn create_table_if_not_exists() {
+async fn create_table_if_not_exists() {
 
 }
 
 
 pub async fn list_dolls() -> Vec<Doll> {
+    create_table_if_not_exists().await;
     println!("Fetching Dolls");
     [].to_vec()
 }
-/* 
+ 
 pub struct SqlHandler {
-    pub conn: async_sqlite::Pool
+    pub conn: rusqlite::Connection
 }
 
 impl SqlHandler {
@@ -162,4 +162,3 @@ impl SqlHandler {
 
     }
 }
-*/
