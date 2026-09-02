@@ -4,6 +4,8 @@ version = "0.1.0"
 edition = "2024"
 
 [dependencies]
-async-sqlite = "0.6.0"
-iced = "0.14.0"
+iced = { version = "0.14.0", features = ["tokio"] }
 rand = "0.10.1"
+sqlx = { version = "0.9.0", features = ["runtime-tokio"] }
+uuid = { version = "1.26.0", features = ["v7"] }
+welds = { version = "0.5.1", features = ["sqlite"] }
