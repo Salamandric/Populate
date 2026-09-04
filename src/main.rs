@@ -188,7 +188,6 @@ impl Populate {
         match self.page {
             //Doll Creation Page
             Page::Creator => 
-            
             container(
                 column![
                     header,
