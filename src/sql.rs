@@ -1,8 +1,7 @@
-use std::error::Error;
 
-use rand::random_range;
-use welds::{self, Client, WeldsError, connections::sqlite::{self, SqliteClient}, exts::VecStateExt, query::builder::QueryBuilder, state::DbState};
-use crate::doll::{self, Doll, DollNames, DollSex};
+
+use welds::{self, Client, connections::sqlite::{self, SqliteClient}, exts::VecStateExt, query::builder::QueryBuilder, state::DbState};
+use crate::doll::{Doll, DollNames};
 
 const DATABASEPATH: &'static str = "dolls.db3";
 

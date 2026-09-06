@@ -1,10 +1,11 @@
-use std::{collections::HashMap, ops::RangeInclusive};
+use std::collections::HashMap;
 
-use rand::{Rng, RngExt, random, random_range, rng, rngs::SmallRng};
+use iced::Task;
+use rand::{RngExt, random_range, rngs::SmallRng};
 use welds::prelude::*;
 use uuid::Uuid;
 
-use crate::{doll, sql::{self, add_doll}};
+use crate::sql;
 
 
 #[derive(Clone, Debug, WeldsModel)]
@@ -27,6 +28,7 @@ pub struct DollNames {
     pub first_name: Option<bool>,
     pub last_name: Option<bool>
 }
+
 #[derive(Debug, Clone)]
 pub enum DollSex {
     Male,
@@ -88,7 +90,7 @@ Functions related to Dolls
 
 pub async fn create_dolls_random(quota: i32) -> Vec<Doll> {
     let mut list = vec![];
-    for d in 0..quota {
+    for _ in 0..quota {
         list.push(create_doll(None).await)
     }
     list
@@ -140,8 +142,6 @@ pub async fn create_doll(parents: Option<(Doll, Doll)>) -> Doll {
         }
     };
     
-    
-
     let doll_data: Vec<u8> = vec![
         rng.random(),
         rng.random(),
